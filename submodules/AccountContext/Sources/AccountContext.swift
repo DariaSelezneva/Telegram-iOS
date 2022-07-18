@@ -875,6 +875,8 @@ public protocol AccountContext: AnyObject {
     
     var userLimits: EngineConfiguration.UserLimits { get }
     
+    var currentDate: Date? { get set }
+    
     func storeSecureIdPassword(password: String)
     func getStoredSecureIdPassword() -> String?
     

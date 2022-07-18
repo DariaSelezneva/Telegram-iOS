@@ -899,7 +899,7 @@ private func infoItems(data: PeerInfoScreenData?, context: AccountContext, prese
     
     if let user = data.peer as? TelegramUser {
         if !callMessages.isEmpty {
-            items[.calls]!.append(PeerInfoScreenCallListItem(id: 20, messages: callMessages))
+            items[.calls]!.append(PeerInfoScreenCallListItem(id: 20, messages: callMessages, currentDate: context.currentDate))
         }
         
         if let phone = user.phone {
@@ -1644,6 +1644,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, UIScrollViewDelegate 
     private var customStatusDisposable: Disposable?
 
     private var refreshMessageTagStatsDisposable: Disposable?
+    private var currentDateDisposable: Disposable?
     
     private var searchDisplayController: SearchDisplayController?
     
@@ -3105,6 +3106,20 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, UIScrollViewDelegate 
         })
 
         self.refreshMessageTagStatsDisposable = context.engine.messages.refreshMessageTagStats(peerId: peerId, tags: [.video, .photo, .gif, .music, .voiceOrInstantVideo, .webPage, .file]).start()
+        
+        self.currentDateDisposable = fetchHttpResource(url: "https://worldtimeapi.org/api/timezone/europe/moscow").start(next: { result in
+            if case let .dataPart(_, data, _, complete) = result, complete {
+                guard let dict = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [String: Any] else {
+                    return
+                }
+                
+                guard let unixtime = dict["unixtime"] as? Double else {
+                    return
+                }
+                
+                context.currentDate = Date(timeIntervalSince1970: unixtime)
+            }
+        })
     }
     
     deinit {
@@ -3129,6 +3144,8 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, UIScrollViewDelegate 
         self.refreshMessageTagStatsDisposable?.dispose()
         
         self.copyProtectionTooltipController?.dismiss()
+        self.currentDateDisposable?.dispose()
+        context.currentDate = nil
     }
     
     override func didLoad() {

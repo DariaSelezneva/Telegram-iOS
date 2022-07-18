@@ -148,6 +148,8 @@ public final class AccountContextImpl: AccountContext {
     public var watchManager: WatchManager?
     
     private var storedPassword: (String, CFAbsoluteTime, SwiftSignalKit.Timer)?
+    public var currentDate: Date? = nil
+    
     private var limitsConfigurationDisposable: Disposable?
     private var contentSettingsDisposable: Disposable?
     private var appConfigurationDisposable: Disposable?
